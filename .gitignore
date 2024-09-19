@@ -51,3 +51,6 @@
 # Visual Studio database files
 *.VC.db
 .vs/
+/ParticleSimulation/x64/Debug
+/ParticleSimulation/x64/Debug/*.exp
+/ParticleSimulation/x64/Debug/*.pdb
