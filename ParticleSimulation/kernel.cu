@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <stdio.h>
+#include <random>
 
 
 struct Particle {
@@ -59,21 +60,30 @@ __global__ void moveParticleKernel(Particle* particles, float dt, float3* paperC
             if (indexX >= 0 && indexX < paperWidth && indexY >= 0 && indexY < paperHeight) {
                 int idx = indexY * paperWidth + indexX;
                 float b = 0.1f; //blending factor
-                //change the value of the paper colour value at point of collision
-                atomicAddFloat(&paperColourValues[idx].x, b * (particles[index].colour.x - paperColourValues[idx].x));
+
+                //These are different methods of adding the color value of the particle to the paper
+
+                /*atomicAddFloat(&paperColourValues[idx].x, b * (particles[index].colour.x - paperColourValues[idx].x));
                 atomicAddFloat(&paperColourValues[idx].y, b * (particles[index].colour.y - paperColourValues[idx].y));
-                atomicAddFloat(&paperColourValues[idx].z, b * (particles[index].colour.z - paperColourValues[idx].z));
+                atomicAddFloat(&paperColourValues[idx].z, b * (particles[index].colour.z - paperColourValues[idx].z));*/
 
                 //paperColourValues[idx].x = ((1.0f - b) * paperColourValues[idx].x + b * particles[index].colour.x);
                 //paperColourValues[idx].y = ((1.0f - b) * paperColourValues[idx].y + b * particles[index].colour.y);
                 //paperColourValues[idx].z = ((1.0f - b) * paperColourValues[idx].z + b * particles[index].colour.z);
+
+                atomicAdd(&paperColourValues[idx].x, 0.3f);
+                
+
+                //paperColourValues[idx].x = 1.0f;
+                //paperColourValues[idx].y = 0;
+                //paperColourValues[idx].z = 0;
             }
         }
     }
 }
 
 //how many particles in the spray can
-const int particleArraySize = 1000;
+const int particleArraySize = 20000;
 
 //paper dimensions
 const int paperWidth = 1000;
@@ -92,14 +102,17 @@ int main()
     paper.colourValues = new float3[paperWidth * paperHeight];
     for (int i = 0; i < paperWidth * paperHeight; i++) {
         //setting all paper colour values to white
-        paper.colourValues[i] = { 1.0f, 1.0f, 1.0f };
+        paper.colourValues[i] = { 0.0f, 0.0f, 0.0f };
 
     }
+
+    std::mt19937 rd;
+    std::uniform_real_distribution<float> dist(-0.3, 0.3);
 
     //initailize array of particles (filling the spray can)
     Particle particles[particleArraySize];
     for (int i = 0; i < particleArraySize; i++) {
-        particles[i].position = { 0.0f, 0.0f, 0.0f };
+        particles[i].position = { dist(rd), 0.0f, dist(rd)};
         particles[i].velocity = { 0.0f, -1.0f, 0.0f };
         particles[i].colour = { 1.0f, 0.0f, 0.0f }; // red color
         particles[i].hasCollided = false;
@@ -124,6 +137,8 @@ int main()
     std::chrono::duration<float> elapsed;
     float totalElapsedTime = 0.0f;
 
+    //int whileLoopsNumber = 0;
+
     //run simulation for 2 seconds
     while (totalElapsedTime < totalSimulationTime) {
         end = std::chrono::high_resolution_clock::now();
@@ -135,6 +150,8 @@ int main()
 
         moveParticleKernel << <(particleArraySize + 255) / 256, 256 >> > (dev_particles, dt, dev_paperColourValues, paper.position, paper.scale, paperWidth, paperHeight);
         cudaDeviceSynchronize();
+        //whileLoopsNumber++;
+        //std::cout << "while loops num = " << whileLoopsNumber << std::endl;
     }
 
     cudaMemcpy(particles, dev_particles, particleArraySize * sizeof(Particle), cudaMemcpyDeviceToHost);

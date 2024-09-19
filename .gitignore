@@ -30,3 +30,24 @@
 *.exe
 *.out
 *.app
+
+# from a Cuda.gitignore I found online
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin
+
+# Some Random Stuff i dont want 
+*.log
+*.tlog
+*.ilk
+*.idb
+*.pdb
+*.exp
+*.deps
+
+# Visual Studio database files
+*.VC.db
+.vs/
