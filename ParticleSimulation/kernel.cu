@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <random>
-
+#include <cmath> 
 
 struct Particle {
     float3 position;
@@ -71,9 +71,8 @@ __global__ void moveParticleKernel(Particle* particles, float dt, float3* paperC
                 //paperColourValues[idx].y = ((1.0f - b) * paperColourValues[idx].y + b * particles[index].colour.y);
                 //paperColourValues[idx].z = ((1.0f - b) * paperColourValues[idx].z + b * particles[index].colour.z);
 
-                atomicAdd(&paperColourValues[idx].x, 0.3f);
+                atomicAdd(&paperColourValues[idx].x, 0.5f);
                 
-
                 //paperColourValues[idx].x = 1.0f;
                 //paperColourValues[idx].y = 0;
                 //paperColourValues[idx].z = 0;
@@ -107,12 +106,21 @@ int main()
     }
 
     std::mt19937 rd;
-    std::uniform_real_distribution<float> dist(-0.3, 0.3);
+    std::uniform_real_distribution<float> radiusDist(0.0, 0.3);   // random radius
+    std::uniform_real_distribution<float> angleDist(0.0, 2 * 3.14); // random angle
+
 
     //initailize array of particles (filling the spray can)
     Particle particles[particleArraySize];
     for (int i = 0; i < particleArraySize; i++) {
-        particles[i].position = { dist(rd), 0.0f, dist(rd)};
+
+        float radius = radiusDist(rd);
+        float angle = angleDist(rd);
+
+        float xVal = radius * cos(angle);
+        float zVal = radius * sin(angle);
+
+        particles[i].position = { xVal , 0.0f, zVal};
         particles[i].velocity = { 0.0f, -1.0f, 0.0f };
         particles[i].colour = { 1.0f, 0.0f, 0.0f }; // red color
         particles[i].hasCollided = false;
