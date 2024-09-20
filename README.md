@@ -1,0 +1,1 @@
+This project simulates a spray can painting onto a piece of paper using GPU programming with CUDA. The program creates thousands of particles representing spray paint droplets that move under gravity and can collide with a virtual paper surface, leaving a mark. The project outputs the final painted image as a bitmap file.
